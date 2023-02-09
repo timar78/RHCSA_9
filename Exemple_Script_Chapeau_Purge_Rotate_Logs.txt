@@ -1,0 +1,81 @@
+#!/bin/ksh
+#---------------------------------------------------------------------
+# FICHIER      : ITRTSM10400P11-Q2DEL01-TLJ-PURGELOG-s00vl9986094.ksh
+# AUTEUR       : Jean-Luc MIGNON
+# DATE         : 08/07/2014
+# MODIF        :
+# APPLI FCT    : EMI
+# BUT          : Script lanceur
+#---------------------------------------------------------------------
+################################################################################################
+#                           DEFINITION DES VARIABLES                                           #
+################################################################################################
+
+#-----------------------------
+# Variable script applicatif
+#-----------------------------
+
+SCRIPT=/apps/toolboxes/exploit/bin/exploit_rotate-log.ksh
+PARAM='-config=/apps/toolboxes/exploit/conf/exploit_rotate-log.conf'
+
+#-----------------------------
+# Variable du lanceur
+#-----------------------------
+RC=0
+PID_LANCEUR=$$
+
+################################################################################################
+#                           DEFINITION DES FONCTIONS                                           #
+################################################################################################
+function LOG {
+        CODE_RC=$1
+        TEXTE=$2
+        case ${CODE_RC} in
+        0)
+                echo "[INFO] : $(date +'%Y-%m-%d %H:%M:%S') : ${TEXTE}"
+                ;;
+        *)
+                echo "[ERROR] [${CODE_RC}] : $(date +'%Y-%m-%d %H:%M:%S') : ${TEXTE}"
+                exit ${CODE_RC}
+                 ;;
+        esac
+}
+################################################################################################
+#                           VERIFICATION DES VARIABLES                                         #
+################################################################################################
+
+
+#-----------------------------
+# Dét du script
+#-----------------------------
+
+echo "==================================================="
+LOG 0 "PID du shell actif : $PID_LANCEUR"
+LOG 0 "User du shell actif : $USER"
+LOG 0 "Hostname du shell actif : $(hostname)"
+if [[ ! -f ${SCRIPT} ]] ; then
+        LOG 16 "Fichier inexistant : ${SCRIPT} "
+fi
+if [[ ! -x ${SCRIPT} ]] ; then
+        LOG 16 "Le user $USER n'a pas les droits d'execution sur le script ${SCRIPT}"
+fi
+cd $(dirname ${SCRIPT})
+LOG 0 "Repertoire du shell actif : $(pwd)"
+LOG 0 "Script lance : ${SCRIPT} ${PARAM}"
+echo "==================================================="
+LOG 0 "Debut execution du process en arriere-plan"
+echo "###################################################"
+${SCRIPT} ${PARAM} &
+PID_APPLI=$!
+LOG 0 "PID process lance en arriere-plan : $PID_APPLI"
+
+wait $PID_APPLI
+RC=$?
+echo "###################################################"
+LOG 0 "Fin execution du process en arriere-plan"
+LOG $RC "Code retour du process en arriere-plan : $RC"
+
+#-----------------------------
+# Fin du script
+#-----------------------------
+exit $RC
